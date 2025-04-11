@@ -8,12 +8,15 @@ import com.convertidor.divisasapi.exception.TasasCambioException;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
+import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
+import org.springframework.boot.test.context.TestConfiguration;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Import;
 import org.springframework.http.MediaType;
+import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
@@ -31,9 +34,9 @@ import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 @WebMvcTest(ConversorDivisasController.class)
-@ContextConfiguration(classes = {ConversorDivisasControllerTest.TestConfig.class, ConversorDivisasController.class})
-@Import(GlobalExceptionHandler.class)
-public class ConversorDivisasControllerTest {
+@Import({ConversorDivisasControllerTest.TestConfig.class, GlobalExceptionHandler.class})
+@DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_EACH_TEST_METHOD) //Se limpia el mock
+class ConversorDivisasControllerTest {
 
     @Autowired
     private MockMvc mockMvc;
@@ -41,17 +44,16 @@ public class ConversorDivisasControllerTest {
     @Autowired
     private ConversorTasaService exchangeRateService;
 
-    // Configuración de contexto de prueba con bean mock
-    public static class TestConfig {
+    @TestConfiguration
+    static class TestConfig {// se aisla mock por error en test
         @Bean
         public ConversorTasaService exchangeRateService() {
-            return mock(ConversorTasaService.class);
+            return Mockito.mock(ConversorTasaService.class);
         }
     }
 
     @Test
     public void cuandoLaEntradaEsValida_haceLaConversion() throws Exception {
-        // Configurar el mock del servicio
         ConversorResponse mockResponse = new ConversorResponse();
         mockResponse.setDivisaEntrada("USD");
         mockResponse.setDivisaSalida("EUR");
@@ -63,7 +65,6 @@ public class ConversorDivisasControllerTest {
         when(exchangeRateService.convertDivisa("USD", "EUR", 100.0))
                 .thenReturn(mockResponse);
 
-        // Ejecutar solicitud HTTP y verificar respuesta
         mockMvc.perform(get("/api/convert")
                         .param("divisaSalida", "EUR")
                         .param("divisaEntrada", "USD")
