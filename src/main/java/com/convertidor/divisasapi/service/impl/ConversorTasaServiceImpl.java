@@ -45,7 +45,7 @@ public class ConversorTasaServiceImpl implements ConversorTasaService {
      * Fetches all exchange rates from the cache or external API.
      */
     @Override
-    @Cacheable(value = "tasaCambio")
+    @Cacheable(value = "tasaCambio") //--> se había cambiado variable de cacheo durante las pruebas
     public List<TasaCambio> getAllTasasCambio() {
         logger.info("Consultado todas las tasas de la API exchangeratesapi.io");
 
